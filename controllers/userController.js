@@ -52,3 +52,58 @@ exports.registerUser = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+exports.verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    let user = await User.findOne({ email, otp });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    // Check if OTP is expired
+    if (user.otpExpires < Date.now()) {
+      return res.status(400).json({ message: 'OTP has expired' });
+    }
+
+    // Clear the OTP fields
+    user.otp = undefined;
+    user.otpExpires = undefined;
+
+    await user.save();
+    res.status(200).json({ message: 'OTP verified successfully' });
+  } catch (err) {
+    console.error('Server error:', err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+
+exports.updateUserInfo = async (req, res) => {
+  const { email, location, age, work, dob, description } = req.body;
+
+  try {
+    let user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if user has verified OTP
+    if (user.otpExpires !== undefined) {
+      return res.status(400).json({ message: 'OTP verification required' });
+    }
+
+    user.location = location || user.location;
+    user.age = age || user.age;
+    user.work = work || user.work;
+    user.dob = dob || user.dob;
+    user.description = description || user.description;
+
+    await user.save();
+    res.status(200).json({ message: 'User information updated successfully' });
+  } catch (err) {
+    console.error('Server error:', err.message);
+    res.status(500).send('Server error');
+  }
+};
