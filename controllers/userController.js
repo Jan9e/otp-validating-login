@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const User = require('../models/userModel');
 const transporter = require('../config/email');
+const jwt = require('jsonwebtoken');
 
 exports.registerUser = async (req, res) => {
   const { username, email, password } = req.body;
@@ -104,6 +105,42 @@ exports.updateUserInfo = async (req, res) => {
     res.status(200).json({ message: 'User information updated successfully' });
   } catch (err) {
     console.error('Server error:', err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+
+exports.loginUser = async (req, res) => {
+  const { emailOrUsername, password } = req.body;
+
+  try {
+    const user = await User.findOne({ $or: [{ email: emailOrUsername }, { username: emailOrUsername }] });
+    if (!user) {
+      return res.status(400).json({ message: 'user not found' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect password' });
+    }
+
+    const payload = {
+      user: {
+        id: user.id,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      }
+    );
+  } catch (err) {
+    console.error('Error logging in user:', err.message);
     res.status(500).send('Server error');
   }
 };
