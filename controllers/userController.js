@@ -144,3 +144,18 @@ exports.loginUser = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+
+// Get user information
+exports.getUserInfo = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password -otp -otpExpires'); // Exclude sensitive fields
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (err) {
+    console.error('Error retrieving user information:', err.message);
+    res.status(500).send('Server error');
+  }
+};
