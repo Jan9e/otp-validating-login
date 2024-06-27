@@ -159,3 +159,35 @@ exports.getUserInfo = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+
+// Update user information
+exports.updateUserInfo = async (req, res) => {
+  const { location, age, work, dob, description } = req.body;
+
+  // Check if at least one field is provided
+  if (location === undefined && age === undefined && work === undefined && dob === undefined && description === undefined) {
+    return res.status(400).json({ message: 'No fields provided to update' });
+  }
+
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update fields if provided
+    if (location !== undefined) user.location = location;
+    if (age !== undefined) user.age = age;
+    if (work !== undefined) user.work = work;
+    if (dob !== undefined) user.dob = dob;
+    if (description !== undefined) user.description = description;
+
+    await user.save();
+    res.json(user);
+  } catch (err) {
+    console.error('Error updating user information:', err.message);
+    res.status(500).send('Server error');
+  }
+};

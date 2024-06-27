@@ -8,5 +8,6 @@ router.post('/verify-otp', verifyOtp);
 router.put('/update-info', updateUserInfo);
 router.post('/login', loginUser);
 router.get('/me', auth, getUserInfo);
+router.put('/me', auth, updateUserInfo);
 
 module.exports = router;
