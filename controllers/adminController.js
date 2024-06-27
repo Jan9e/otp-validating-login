@@ -1,6 +1,7 @@
 const Admin = require('../models/adminModel');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
 
 dotenv.config();
 
@@ -36,3 +37,43 @@ exports.registerAdmin = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+// Login admin
+exports.loginAdmin = async (req, res) => {
+    const { emailOrUsername, password } = req.body;
+  
+    try {
+      // Find admin by email or username
+      const admin = await Admin.findOne({ $or: [{ email: emailOrUsername }, { username: emailOrUsername }] });
+      if (!admin) {
+        return res.status(400).json({ message: 'username not found' });
+      }
+  
+      // Check password
+      const isMatch = await bcrypt.compare(password, admin.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Incorrect password' });
+      }
+  
+      // Create JWT Payload
+      const payload = {
+        admin: {
+          id: admin.id,
+        },
+      };
+  
+      // Sign the token
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+        }
+      );
+    } catch (err) {
+      console.error('Error logging in admin:', err.message);
+      res.status(500).send('Server error');
+    }
+  };
