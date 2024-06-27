@@ -191,3 +191,16 @@ exports.updateUserInfo = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+
+//get all users
+exports.getAllUsers = async (req, res) => {
+  try {
+    // Fetch all users
+    const users = await User.find({}, 'username'); // Only select the 'username' field
+    res.json(users);
+  } catch (err) {
+    console.error('Error fetching users:', err.message);
+    res.status(500).send('Server error');
+  }
+};
