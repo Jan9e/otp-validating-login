@@ -81,7 +81,7 @@ exports.verifyOtp = async (req, res) => {
 };
 
 
-exports.updateUserInfo = async (req, res) => {
+exports.addUserInfo = async (req, res) => {
   const { email, location, age, work, dob, description } = req.body;
 
   try {
@@ -201,6 +201,38 @@ exports.getAllUsers = async (req, res) => {
     res.json(users);
   } catch (err) {
     console.error('Error fetching users:', err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+// Get user details by username
+exports.getUserDetails = async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (err) {
+    console.error('Error fetching user details:', err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+// Delete user by username
+exports.deleteUser = async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const user = await User.findOneAndDelete({ username });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting user:', err.message);
     res.status(500).send('Server error');
   }
 };
